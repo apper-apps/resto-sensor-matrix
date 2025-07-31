@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { orderService } from "@/services/api/orderService";
+import { DndContext, DragOverlay, closestCenter } from "@dnd-kit/core";
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import DraggableOrderCard from "@/components/atoms/DraggableOrderCard";
+import DroppableColumn from "@/components/atoms/DroppableColumn";
 import { menuService } from "@/services/api/menuService";
+import { orderService } from "@/services/api/orderService";
 import ApperIcon from "@/components/ApperIcon";
 import SearchBar from "@/components/molecules/SearchBar";
 import Modal from "@/components/molecules/Modal";
@@ -9,11 +14,10 @@ import MenuItemCard from "@/components/molecules/MenuItemCard";
 import Loading from "@/components/ui/Loading";
 import Error from "@/components/ui/Error";
 import Empty from "@/components/ui/Empty";
+import Badge from "@/components/atoms/Badge";
 import Input from "@/components/atoms/Input";
 import Button from "@/components/atoms/Button";
-import Badge from "@/components/atoms/Badge";
 import { Card, CardContent } from "@/components/atoms/Card";
-
 const Orders = () => {
   // State management
   const [orders, setOrders] = useState([]);
@@ -33,11 +37,34 @@ const Orders = () => {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+// Timer state for real-time updates
+  const [timers, setTimers] = useState({});
+  const [activeId, setActiveId] = useState(null);
 
   // Load data on component mount
   useEffect(() => {
     loadData();
   }, []);
+
+  // Timer effect for real-time updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const newTimers = {};
+      
+      orders.forEach(order => {
+        const createdTime = new Date(order.updatedAt || order.createdAt);
+        const diffMs = now - createdTime;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffSecs = Math.floor((diffMs % 60000) / 1000);
+        newTimers[order.Id] = { minutes: diffMins, seconds: diffSecs };
+      });
+      
+      setTimers(newTimers);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [orders]);
 
   const loadData = async () => {
     try {
@@ -159,7 +186,7 @@ const Orders = () => {
     }
   };
 
-  const handleStatusUpdate = async (orderId, newStatus) => {
+const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       await orderService.updateOrderStatus(orderId, newStatus);
       toast.success(`Order status updated to ${newStatus}`);
@@ -167,6 +194,30 @@ const Orders = () => {
     } catch (err) {
       toast.error("Failed to update order status");
     }
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (event) => {
+    setActiveId(event.active.id);
+  };
+
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (!over) return;
+
+    const orderId = parseInt(active.id);
+    const newStatus = over.id;
+    const order = orders.find(o => o.Id === orderId);
+
+    if (order && order.status !== newStatus) {
+      await handleStatusUpdate(orderId, newStatus);
+    }
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
   };
 
   const handleDeleteOrder = async (orderId) => {
@@ -239,221 +290,200 @@ const Orders = () => {
       </div>
 
       {/* Three-column layout */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
-        {/* Left Column - Order Queue (25%) */}
-        <div className="lg:col-span-1 flex flex-col">
-          <Card className="flex-1 flex flex-col">
-            <CardContent className="p-4 flex-1 flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Order Queue</h2>
-                <Badge variant="default" className="text-xs">
-                  {filteredOrders.length} orders
-                </Badge>
-              </div>
+<DndContext
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-6 min-h-0">
+          {/* Status Columns - Kanban Style */}
+          {['received', 'preparing', 'ready', 'served'].map(status => {
+            const statusConfig = getStatusConfig(status);
+            const statusOrders = filteredOrders.filter(order => order.status === status);
+            
+            return (
+              <div key={status} className="flex flex-col">
+                <Card className="flex-1 flex flex-col">
+                  <CardContent className="p-4 flex-1 flex flex-col">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <ApperIcon name={statusConfig.icon} className="h-4 w-4" />
+                        <h2 className="text-sm font-semibold text-gray-900">{statusConfig.label}</h2>
+                      </div>
+                      <Badge className={`text-xs ${statusConfig.color}`}>
+                        {statusOrders.length}
+                      </Badge>
+                    </div>
 
-              <div className="flex-1 overflow-y-auto space-y-3">
-                {filteredOrders.length === 0 ? (
-                  <Empty message="No orders found" />
-                ) : (
-                  filteredOrders.map(order => {
-                    const statusConfig = getStatusConfig(order.status);
-                    return (
-                      <div
-                        key={order.Id}
-                        className={`p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-primary-300 transition-all duration-200 ${
-                          selectedOrder?.Id === order.Id ? 'border-primary-500 bg-primary-50' : ''
-                        }`}
-                        onClick={() => setSelectedOrder(order)}
+                    <DroppableColumn status={status}>
+                      <div className="flex-1 overflow-y-auto space-y-3">
+                        {statusOrders.length === 0 ? (
+                          <div className="text-center text-gray-400 py-8">
+                            <ApperIcon name="Package" className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p className="text-xs">No orders</p>
+                          </div>
+                        ) : (
+                          statusOrders.map(order => (
+                            <DraggableOrderCard
+                              key={order.Id}
+                              order={order}
+                              timer={timers[order.Id]}
+                              isSelected={selectedOrder?.Id === order.Id}
+                              onClick={() => setSelectedOrder(order)}
+                            />
+                          ))
+                        )}
+                      </div>
+                    </DroppableColumn>
+                  </CardContent>
+                </Card>
+              </div>
+            );
+          })}
+
+          {/* Right Column - Order Details */}
+          <div className="flex flex-col">
+            <Card className="flex-1 flex flex-col">
+              <CardContent className="p-4 flex-1 flex flex-col">
+                {selectedOrder ? (
+                  <>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-semibold text-gray-900">Order Details</h2>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedOrder(null)}
                       >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="font-semibold text-sm text-gray-900">
-                            {order.orderNumber}
-                          </div>
-                          <Badge className={`text-xs ${statusConfig.color}`}>
-                            {statusConfig.label}
-                          </Badge>
-                        </div>
-                        
-                        <div className="space-y-1 text-xs text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <ApperIcon name="User" className="h-3 w-3" />
-                            {order.customerName}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <ApperIcon name={order.orderType === 'delivery' ? 'Truck' : 'MapPin'} className="h-3 w-3" />
-                            {order.tableNumber}
-                          </div>
+                        <ApperIcon name="X" className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto space-y-4">
+                      {/* Order Info */}
+                      <div className="space-y-2">
+                        <div className="font-semibold text-gray-900">{selectedOrder.orderNumber}</div>
+                        <div className="text-sm text-gray-600">
+                          <div>Customer: {selectedOrder.customerName}</div>
+                          <div>Location: {selectedOrder.tableNumber}</div>
+                          <div>Type: {selectedOrder.orderType}</div>
                           <div className="flex items-center gap-1">
                             <ApperIcon name="Clock" className="h-3 w-3" />
-                            {formatTime(order.createdAt)}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <ApperIcon name="Package" className="h-3 w-3" />
-                            {order.items.length} items - {formatCurrency(order.totalAmount)}
+                            {formatTime(selectedOrder.createdAt)}
+                            {timers[selectedOrder.Id] && (
+                              <span className="ml-2 text-xs bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded">
+                                {timers[selectedOrder.Id].minutes}m {timers[selectedOrder.Id].seconds}s
+                              </span>
+                            )}
                           </div>
                         </div>
+                        {selectedOrder.specialRequests && (
+                          <div className="text-sm">
+                            <div className="font-medium text-gray-700">Special Requests:</div>
+                            <div className="text-gray-600">{selectedOrder.specialRequests}</div>
+                          </div>
+                        )}
                       </div>
-                    );
-                  })
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* Center Column - Order Creation (50%) */}
-        <div className="lg:col-span-2 flex flex-col">
-          <Card className="flex-1 flex flex-col">
-            <CardContent className="p-4 flex-1 flex flex-col">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Menu Items</h2>
-              
-              <div className="flex-1 overflow-y-auto">
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {menuItems.filter(item => item.isAvailable).map(item => (
-                    <div key={item.Id} className="group">
-                      <MenuItemCard
-                        item={item}
-                        onEdit={() => {}}
-                        onDelete={() => {}}
-                        onToggleAvailability={() => {}}
-                      />
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        className="w-full mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                        onClick={() => handleAddMenuItem(item)}
-                      >
-                        <ApperIcon name="Plus" className="h-3 w-3 mr-1" />
-                        Add to Order
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right Column - Order Details (25%) */}
-        <div className="lg:col-span-1 flex flex-col">
-          <Card className="flex-1 flex flex-col">
-            <CardContent className="p-4 flex-1 flex flex-col">
-              {selectedOrder ? (
-                <>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-gray-900">Order Details</h2>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedOrder(null)}
-                    >
-                      <ApperIcon name="X" className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <div className="flex-1 overflow-y-auto space-y-4">
-                    {/* Order Info */}
-                    <div className="space-y-2">
-                      <div className="font-semibold text-gray-900">{selectedOrder.orderNumber}</div>
-                      <div className="text-sm text-gray-600">
-                        <div>Customer: {selectedOrder.customerName}</div>
-                        <div>Location: {selectedOrder.tableNumber}</div>
-                        <div>Type: {selectedOrder.orderType}</div>
-                        <div>Time: {formatTime(selectedOrder.createdAt)}</div>
-                      </div>
-                      {selectedOrder.specialRequests && (
-                        <div className="text-sm">
-                          <div className="font-medium text-gray-700">Special Requests:</div>
-                          <div className="text-gray-600">{selectedOrder.specialRequests}</div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Order Items */}
-                    <div>
-                      <h3 className="font-medium text-gray-900 mb-2">Items</h3>
-                      <div className="space-y-2">
-                        {selectedOrder.items.map(item => (
-                          <div key={item.Id} className="text-sm border border-gray-200 rounded p-2">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <div className="font-medium">{item.menuItemName}</div>
-                                <div className="text-gray-600">Qty: {item.quantity}</div>
-                                {item.specialRequests && (
-                                  <div className="text-gray-500 text-xs mt-1">
-                                    Note: {item.specialRequests}
-                                  </div>
-                                )}
-                              </div>
-                              <div className="font-medium">
-                                {formatCurrency(item.price * item.quantity)}
+                      {/* Order Items */}
+                      <div>
+                        <h3 className="font-medium text-gray-900 mb-2">Items</h3>
+                        <div className="space-y-2">
+                          {selectedOrder.items.map(item => (
+                            <div key={item.Id} className="text-sm border border-gray-200 rounded p-2">
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="font-medium">{item.menuItemName}</div>
+                                  <div className="text-gray-600">Qty: {item.quantity}</div>
+                                  {item.specialRequests && (
+                                    <div className="text-gray-500 text-xs mt-1">
+                                      Note: {item.specialRequests}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="font-medium">
+                                  {formatCurrency(item.price * item.quantity)}
+                                </div>
                               </div>
                             </div>
+                          ))}
+                        </div>
+                        <div className="border-t border-gray-200 mt-2 pt-2 text-sm font-semibold flex justify-between">
+                          <span>Total:</span>
+                          <span>{formatCurrency(selectedOrder.totalAmount)}</span>
+                        </div>
+                      </div>
+
+                      {/* Menu Items Section */}
+                      <div>
+                        <h3 className="font-medium text-gray-900 mb-2">Add Items</h3>
+                        <div className="max-h-64 overflow-y-auto">
+                          <div className="grid grid-cols-1 gap-2">
+                            {menuItems.filter(item => item.isAvailable).slice(0, 6).map(item => (
+                              <div key={item.Id} className="flex items-center justify-between p-2 border border-gray-200 rounded text-xs">
+                                <div className="flex-1">
+                                  <div className="font-medium">{item.name}</div>
+                                  <div className="text-gray-600">{formatCurrency(item.price)}</div>
+                                </div>
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  className="text-xs px-2 py-1"
+                                  onClick={() => handleAddMenuItem(item)}
+                                >
+                                  <ApperIcon name="Plus" className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        </div>
                       </div>
-                      <div className="border-t border-gray-200 mt-2 pt-2 text-sm font-semibold flex justify-between">
-                        <span>Total:</span>
-                        <span>{formatCurrency(selectedOrder.totalAmount)}</span>
+
+                      {/* Payment & Actions */}
+                      <div className="space-y-2">
+                        <Button
+                          variant="primary"
+                          className="w-full"
+                          disabled={selectedOrder.status !== 'served'}
+                        >
+                          <ApperIcon name="CreditCard" className="h-4 w-4 mr-2" />
+                          Process Payment
+                        </Button>
+                        <Button
+                          variant="danger"
+                          className="w-full"
+                          onClick={() => handleDeleteOrder(selectedOrder.Id)}
+                        >
+                          <ApperIcon name="Trash2" className="h-4 w-4 mr-2" />
+                          Delete Order
+                        </Button>
                       </div>
                     </div>
-
-                    {/* Status Actions */}
-                    <div>
-                      <h3 className="font-medium text-gray-900 mb-2">Update Status</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        {['received', 'preparing', 'ready', 'served'].map(status => {
-                          const config = getStatusConfig(status);
-                          return (
-                            <Button
-                              key={status}
-                              variant={selectedOrder.status === status ? 'primary' : 'secondary'}
-                              size="sm"
-                              className="text-xs"
-                              onClick={() => handleStatusUpdate(selectedOrder.Id, status)}
-                              disabled={selectedOrder.status === status}
-                            >
-                              <ApperIcon name={config.icon} className="h-3 w-3 mr-1" />
-                              {config.label}
-                            </Button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Payment & Actions */}
-                    <div className="space-y-2">
-                      <Button
-                        variant="primary"
-                        className="w-full"
-                        disabled={selectedOrder.status !== 'served'}
-                      >
-                        <ApperIcon name="CreditCard" className="h-4 w-4 mr-2" />
-                        Process Payment
-                      </Button>
-                      <Button
-                        variant="danger"
-                        className="w-full"
-                        onClick={() => handleDeleteOrder(selectedOrder.Id)}
-                      >
-                        <ApperIcon name="Trash2" className="h-4 w-4 mr-2" />
-                        Delete Order
-                      </Button>
+                  </>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center text-gray-500">
+                      <ApperIcon name="ClipboardList" className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                      <p>Select an order to view details</p>
+                      <p className="text-xs mt-1">or drag orders between columns</p>
                     </div>
                   </div>
-                </>
-              ) : (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center text-gray-500">
-                    <ApperIcon name="ClipboardList" className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                    <p>Select an order to view details</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+
+        <DragOverlay>
+          {activeId ? (
+            <div className="p-3 border-2 border-primary-300 bg-primary-50 rounded-lg shadow-lg opacity-90">
+              <div className="font-semibold text-sm text-gray-900">
+                {orders.find(o => o.Id === parseInt(activeId))?.orderNumber}
+              </div>
+            </div>
+          ) : null}
+</DragOverlay>
+      </DndContext>
 
       {/* Order Creation Modal */}
       <Modal 
