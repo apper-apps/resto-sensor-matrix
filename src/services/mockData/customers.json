@@ -1,0 +1,32 @@
+[
+  {
+    "Id": 1,
+    "name": "John Smith",
+    "email": "john.smith@email.com",
+    "phone": "+1-555-0123"
+  },
+  {
+    "Id": 2,
+    "name": "Sarah Johnson",
+    "email": "sarah.j@email.com",
+    "phone": "+1-555-0456"
+  },
+  {
+    "Id": 3,
+    "name": "Mike Wilson",
+    "email": "mike.wilson@email.com",
+    "phone": "+1-555-0789"
+  },
+  {
+    "Id": 4,
+    "name": "Emily Davis",
+    "email": "emily.davis@email.com",
+    "phone": "+1-555-0321"
+  },
+  {
+    "Id": 5,
+    "name": "Walk-In Customer",
+    "email": "",
+    "phone": ""
+  }
+]

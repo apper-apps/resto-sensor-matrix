@@ -1,0 +1,134 @@
+[
+  {
+    "Id": 1,
+    "orderNumber": "ORD-001",
+    "customerId": 1,
+    "customerName": "John Smith",
+    "tableNumber": "Table 5",
+    "orderType": "dine-in",
+    "status": "preparing",
+    "items": [
+      {
+        "Id": 1,
+        "menuItemId": 1,
+        "menuItemName": "Truffle Arancini",
+        "quantity": 2,
+        "price": 16.99,
+        "specialRequests": "Extra sauce on the side"
+      },
+      {
+        "Id": 2,
+        "menuItemId": 4,
+        "menuItemName": "Grilled Atlantic Salmon",
+        "quantity": 1,
+        "price": 32.99,
+        "specialRequests": ""
+      }
+    ],
+    "specialRequests": "Table prefers low lighting",
+    "totalAmount": 66.97,
+    "createdAt": "2024-01-15T12:45:00Z",
+    "updatedAt": "2024-01-15T12:50:00Z"
+  },
+  {
+    "Id": 2,
+    "orderNumber": "ORD-002",
+    "customerId": 2,
+    "customerName": "Sarah Johnson",
+    "tableNumber": "Table 2",
+    "orderType": "dine-in",
+    "status": "ready",
+    "items": [
+      {
+        "Id": 3,
+        "menuItemId": 8,
+        "menuItemName": "Chocolate Lava Cake",
+        "quantity": 1,
+        "price": 12.99,
+        "specialRequests": ""
+      },
+      {
+        "Id": 4,
+        "menuItemId": 10,
+        "menuItemName": "Craft Cocktail Selection",
+        "quantity": 2,
+        "price": 14.99,
+        "specialRequests": "Make one virgin"
+      }
+    ],
+    "specialRequests": "",
+    "totalAmount": 42.97,
+    "createdAt": "2024-01-15T12:50:00Z",
+    "updatedAt": "2024-01-15T13:15:00Z"
+  },
+  {
+    "Id": 3,
+    "orderNumber": "ORD-003",
+    "customerId": 3,
+    "customerName": "Mike Wilson",
+    "tableNumber": "Delivery - 123 Main St",
+    "orderType": "delivery",
+    "status": "received",
+    "items": [
+      {
+        "Id": 5,
+        "menuItemId": 5,
+        "menuItemName": "Dry-Aged Ribeye",
+        "quantity": 1,
+        "price": 48.99,
+        "specialRequests": "Medium rare"
+      },
+      {
+        "Id": 6,
+        "menuItemId": 12,
+        "menuItemName": "Caesar Salad",
+        "quantity": 1,
+        "price": 14.99,
+        "specialRequests": "Dressing on the side"
+      },
+      {
+        "Id": 7,
+        "menuItemId": 9,
+        "menuItemName": "Tiramisu",
+        "quantity": 2,
+        "price": 10.99,
+        "specialRequests": ""
+      }
+    ],
+    "specialRequests": "Please call when driver arrives",
+    "totalAmount": 85.96,
+    "createdAt": "2024-01-15T13:15:00Z",
+    "updatedAt": "2024-01-15T13:15:00Z"
+  },
+  {
+    "Id": 4,
+    "orderNumber": "ORD-004",
+    "customerId": 4,
+    "customerName": "Emily Davis",
+    "tableNumber": "Table 8",
+    "orderType": "dine-in",
+    "status": "served",
+    "items": [
+      {
+        "Id": 8,
+        "menuItemId": 2,
+        "menuItemName": "Burrata Caprese",
+        "quantity": 1,
+        "price": 18.50,
+        "specialRequests": ""
+      },
+      {
+        "Id": 9,
+        "menuItemId": 7,
+        "menuItemName": "Lobster Ravioli",
+        "quantity": 1,
+        "price": 29.99,
+        "specialRequests": "Light on the cream sauce"
+      }
+    ],
+    "specialRequests": "",
+    "totalAmount": 48.49,
+    "createdAt": "2024-01-15T11:30:00Z",
+    "updatedAt": "2024-01-15T12:45:00Z"
+  }
+]

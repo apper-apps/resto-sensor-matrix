@@ -1,4 +1,4 @@
-import React from "react";
+import React, { forwardRef } from "react";
 import { cn } from "@/utils/cn";
 
 const Input = React.forwardRef(({ 
@@ -33,5 +33,4 @@ const Input = React.forwardRef(({
 });
 
 Input.displayName = "Input";
-
 export default Input;
