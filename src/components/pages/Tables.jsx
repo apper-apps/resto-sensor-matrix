@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
-import { useDraggable } from "@dnd-kit/sortable";
+import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, useDraggable } from "@dnd-kit/core";
 import { toast } from "react-toastify";
 import { tableService } from "@/services/api/tableService";
 import ApperIcon from "@/components/ApperIcon";
