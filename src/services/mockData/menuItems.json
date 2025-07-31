@@ -1,0 +1,145 @@
+[
+  {
+    "Id": 1,
+    "name": "Truffle Arancini",
+    "price": 16.99,
+    "description": "Crispy risotto balls stuffed with truffle and parmesan, served with garlic aioli",
+    "categoryId": 1,
+    "imageUrl": "",
+    "isAvailable": true,
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  {
+    "Id": 2,
+    "name": "Burrata Caprese",
+    "price": 18.50,
+    "description": "Fresh burrata cheese with heirloom tomatoes, basil, and balsamic reduction",
+    "categoryId": 1,
+    "imageUrl": "",
+    "isAvailable": true,
+    "createdAt": "2024-01-15T10:31:00Z",
+    "updatedAt": "2024-01-15T10:31:00Z"
+  },
+  {
+    "Id": 3,
+    "name": "Pan-Seared Scallops",
+    "price": 24.99,
+    "description": "Diver scallops with cauliflower puree and pancetta crisps",
+    "categoryId": 1,
+    "imageUrl": "",
+    "isAvailable": false,
+    "createdAt": "2024-01-15T10:32:00Z",
+    "updatedAt": "2024-01-15T10:32:00Z"
+  },
+  {
+    "Id": 4,
+    "name": "Grilled Atlantic Salmon",
+    "price": 32.99,
+    "description": "Fresh Atlantic salmon with lemon herb butter, asparagus, and roasted fingerling potatoes",
+    "categoryId": 2,
+    "imageUrl": "",
+    "isAvailable": true,
+    "createdAt": "2024-01-15T10:33:00Z",
+    "updatedAt": "2024-01-15T10:33:00Z"
+  },
+  {
+    "Id": 5,
+    "name": "Dry-Aged Ribeye",
+    "price": 48.99,
+    "description": "28-day dry-aged ribeye with truffle mashed potatoes and seasonal vegetables",
+    "categoryId": 2,
+    "imageUrl": "",
+    "isAvailable": true,
+    "createdAt": "2024-01-15T10:34:00Z",
+    "updatedAt": "2024-01-15T10:34:00Z"
+  },
+  {
+    "Id": 6,
+    "name": "Duck Confit",
+    "price": 36.99,
+    "description": "Slow-cooked duck leg with cherry gastrique and wild rice pilaf",
+    "categoryId": 2,
+    "imageUrl": "",
+    "isAvailable": true,
+    "createdAt": "2024-01-15T10:35:00Z",
+    "updatedAt": "2024-01-15T10:35:00Z"
+  },
+  {
+    "Id": 7,
+    "name": "Lobster Ravioli",
+    "price": 29.99,
+    "description": "House-made ravioli filled with Maine lobster in a champagne cream sauce",
+    "categoryId": 2,
+    "imageUrl": "",
+    "isAvailable": true,
+    "createdAt": "2024-01-15T10:36:00Z",
+    "updatedAt": "2024-01-15T10:36:00Z"
+  },
+  {
+    "Id": 8,
+    "name": "Chocolate Lava Cake",
+    "price": 12.99,
+    "description": "Warm chocolate cake with molten center, vanilla ice cream, and berry coulis",
+    "categoryId": 3,
+    "imageUrl": "",
+    "isAvailable": true,
+    "createdAt": "2024-01-15T10:37:00Z",
+    "updatedAt": "2024-01-15T10:37:00Z"
+  },
+  {
+    "Id": 9,
+    "name": "Tiramisu",
+    "price": 10.99,
+    "description": "Traditional Italian tiramisu with espresso-soaked ladyfingers and mascarpone",
+    "categoryId": 3,
+    "imageUrl": "",
+    "isAvailable": true,
+    "createdAt": "2024-01-15T10:38:00Z",
+    "updatedAt": "2024-01-15T10:38:00Z"
+  },
+  {
+    "Id": 10,
+    "name": "Craft Cocktail Selection",
+    "price": 14.99,
+    "description": "Ask your server about our rotating selection of handcrafted cocktails",
+    "categoryId": 4,
+    "imageUrl": "",
+    "isAvailable": true,
+    "createdAt": "2024-01-15T10:39:00Z",
+    "updatedAt": "2024-01-15T10:39:00Z"
+  },
+  {
+    "Id": 11,
+    "name": "Wine Pairing",
+    "price": 18.99,
+    "description": "Curated wine selection to complement your meal, chosen by our sommelier",
+    "categoryId": 4,
+    "imageUrl": "",
+    "isAvailable": true,
+    "createdAt": "2024-01-15T10:40:00Z",
+    "updatedAt": "2024-01-15T10:40:00Z"
+  },
+  {
+    "Id": 12,
+    "name": "Caesar Salad",
+    "price": 14.99,
+    "description": "Crisp romaine lettuce with house-made caesar dressing, parmesan, and croutons",
+    "categoryId": 5,
+    "imageUrl": "",
+    "isAvailable": true,
+    "createdAt": "2024-01-15T10:41:00Z",
+    "updatedAt": "2024-01-15T10:41:00Z"
+  },
+  {
+    "Id": 13,
+    "name": "Beet and Goat Cheese Salad",
+    "price": 16.99,
+    "description": "Roasted golden beets with goat cheese, candied walnuts, and mixed greens",
+    "categoryId": 5,
+    "imageUrl": "",
+    "isAvailable": true,
+    "createdAt": "2024-01-15T10:42:00Z",
+    "updatedAt": "2024-01-15T10:42:00Z"
+  }
+]

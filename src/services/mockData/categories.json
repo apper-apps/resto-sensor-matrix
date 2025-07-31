@@ -1,0 +1,37 @@
+[
+  {
+    "Id": 1,
+    "name": "Appetizers",
+    "displayOrder": 1,
+    "itemCount": 6,
+    "isActive": true
+  },
+  {
+    "Id": 2,
+    "name": "Main Courses",
+    "displayOrder": 2,
+    "itemCount": 12,
+    "isActive": true
+  },
+  {
+    "Id": 3,
+    "name": "Desserts",
+    "displayOrder": 3,
+    "itemCount": 5,
+    "isActive": true
+  },
+  {
+    "Id": 4,
+    "name": "Beverages",
+    "displayOrder": 4,
+    "itemCount": 8,
+    "isActive": true
+  },
+  {
+    "Id": 5,
+    "name": "Salads",
+    "displayOrder": 5,
+    "itemCount": 4,
+    "isActive": true
+  }
+]
