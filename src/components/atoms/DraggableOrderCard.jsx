@@ -4,7 +4,7 @@ import { CSS } from '@dnd-kit/utilities';
 import ApperIcon from '@/components/ApperIcon';
 import Badge from '@/components/atoms/Badge';
 
-const DraggableOrderCard = ({ order, timer, isSelected, onClick }) => {
+const DraggableOrderCard = ({ order, timer, onClick }) => {
   const {
     attributes,
     listeners,
@@ -52,8 +52,8 @@ const DraggableOrderCard = ({ order, timer, isSelected, onClick }) => {
       {...attributes}
       {...listeners}
       className={`p-3 border border-gray-200 rounded-lg cursor-grab hover:border-primary-300 transition-all duration-200 ${
-        isSelected ? 'border-primary-500 bg-primary-50' : ''
-      } ${isDragging ? 'opacity-50' : ''}`}
+        isDragging ? 'opacity-50' : ''
+      }`}
       onClick={onClick}
     >
       <div className="flex items-start justify-between mb-2">

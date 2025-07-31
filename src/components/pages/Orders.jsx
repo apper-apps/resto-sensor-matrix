@@ -3,8 +3,6 @@ import { toast } from "react-toastify";
 import { DndContext, DragOverlay, closestCenter } from "@dnd-kit/core";
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import DraggableOrderCard from "@/components/atoms/DraggableOrderCard";
-import DroppableColumn from "@/components/atoms/DroppableColumn";
 import { menuService } from "@/services/api/menuService";
 import { orderService } from "@/services/api/orderService";
 import ApperIcon from "@/components/ApperIcon";
@@ -17,6 +15,8 @@ import Empty from "@/components/ui/Empty";
 import Badge from "@/components/atoms/Badge";
 import Input from "@/components/atoms/Input";
 import Button from "@/components/atoms/Button";
+import DraggableOrderCard from "@/components/atoms/DraggableOrderCard";
+import DroppableColumn from "@/components/atoms/DroppableColumn";
 import { Card, CardContent } from "@/components/atoms/Card";
 const Orders = () => {
   // State management
@@ -25,7 +25,6 @@ const Orders = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [currentOrder, setCurrentOrder] = useState({
     items: [],
@@ -220,13 +219,12 @@ const handleStatusUpdate = async (orderId, newStatus) => {
     setActiveId(null);
   };
 
-  const handleDeleteOrder = async (orderId) => {
+const handleDeleteOrder = async (orderId) => {
     if (!window.confirm("Are you sure you want to delete this order?")) return;
     
     try {
       await orderService.deleteOrder(orderId);
       toast.success("Order deleted successfully!");
-      setSelectedOrder(null);
       loadData();
     } catch (err) {
       toast.error("Failed to delete order");
@@ -296,7 +294,7 @@ const handleStatusUpdate = async (orderId, newStatus) => {
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-6 min-h-0">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
           {/* Status Columns - Kanban Style */}
           {['received', 'preparing', 'ready', 'served'].map(status => {
             const statusConfig = getStatusConfig(status);
@@ -329,8 +327,6 @@ const handleStatusUpdate = async (orderId, newStatus) => {
                               key={order.Id}
                               order={order}
                               timer={timers[order.Id]}
-                              isSelected={selectedOrder?.Id === order.Id}
-                              onClick={() => setSelectedOrder(order)}
                             />
                           ))
                         )}
@@ -341,137 +337,6 @@ const handleStatusUpdate = async (orderId, newStatus) => {
               </div>
             );
           })}
-
-          {/* Right Column - Order Details */}
-          <div className="flex flex-col">
-            <Card className="flex-1 flex flex-col">
-              <CardContent className="p-4 flex-1 flex flex-col">
-                {selectedOrder ? (
-                  <>
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-lg font-semibold text-gray-900">Order Details</h2>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedOrder(null)}
-                      >
-                        <ApperIcon name="X" className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto space-y-4">
-                      {/* Order Info */}
-                      <div className="space-y-2">
-                        <div className="font-semibold text-gray-900">{selectedOrder.orderNumber}</div>
-                        <div className="text-sm text-gray-600">
-                          <div>Customer: {selectedOrder.customerName}</div>
-                          <div>Location: {selectedOrder.tableNumber}</div>
-                          <div>Type: {selectedOrder.orderType}</div>
-                          <div className="flex items-center gap-1">
-                            <ApperIcon name="Clock" className="h-3 w-3" />
-                            {formatTime(selectedOrder.createdAt)}
-                            {timers[selectedOrder.Id] && (
-                              <span className="ml-2 text-xs bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded">
-                                {timers[selectedOrder.Id].minutes}m {timers[selectedOrder.Id].seconds}s
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        {selectedOrder.specialRequests && (
-                          <div className="text-sm">
-                            <div className="font-medium text-gray-700">Special Requests:</div>
-                            <div className="text-gray-600">{selectedOrder.specialRequests}</div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Order Items */}
-                      <div>
-                        <h3 className="font-medium text-gray-900 mb-2">Items</h3>
-                        <div className="space-y-2">
-                          {selectedOrder.items.map(item => (
-                            <div key={item.Id} className="text-sm border border-gray-200 rounded p-2">
-                              <div className="flex justify-between items-start">
-                                <div className="flex-1">
-                                  <div className="font-medium">{item.menuItemName}</div>
-                                  <div className="text-gray-600">Qty: {item.quantity}</div>
-                                  {item.specialRequests && (
-                                    <div className="text-gray-500 text-xs mt-1">
-                                      Note: {item.specialRequests}
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="font-medium">
-                                  {formatCurrency(item.price * item.quantity)}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="border-t border-gray-200 mt-2 pt-2 text-sm font-semibold flex justify-between">
-                          <span>Total:</span>
-                          <span>{formatCurrency(selectedOrder.totalAmount)}</span>
-                        </div>
-                      </div>
-
-                      {/* Menu Items Section */}
-                      <div>
-                        <h3 className="font-medium text-gray-900 mb-2">Add Items</h3>
-                        <div className="max-h-64 overflow-y-auto">
-                          <div className="grid grid-cols-1 gap-2">
-                            {menuItems.filter(item => item.isAvailable).slice(0, 6).map(item => (
-                              <div key={item.Id} className="flex items-center justify-between p-2 border border-gray-200 rounded text-xs">
-                                <div className="flex-1">
-                                  <div className="font-medium">{item.name}</div>
-                                  <div className="text-gray-600">{formatCurrency(item.price)}</div>
-                                </div>
-                                <Button
-                                  variant="primary"
-                                  size="sm"
-                                  className="text-xs px-2 py-1"
-                                  onClick={() => handleAddMenuItem(item)}
-                                >
-                                  <ApperIcon name="Plus" className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Payment & Actions */}
-                      <div className="space-y-2">
-                        <Button
-                          variant="primary"
-                          className="w-full"
-                          disabled={selectedOrder.status !== 'served'}
-                        >
-                          <ApperIcon name="CreditCard" className="h-4 w-4 mr-2" />
-                          Process Payment
-                        </Button>
-                        <Button
-                          variant="danger"
-                          className="w-full"
-                          onClick={() => handleDeleteOrder(selectedOrder.Id)}
-                        >
-                          <ApperIcon name="Trash2" className="h-4 w-4 mr-2" />
-                          Delete Order
-                        </Button>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center text-gray-500">
-                      <ApperIcon name="ClipboardList" className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                      <p>Select an order to view details</p>
-                      <p className="text-xs mt-1">or drag orders between columns</p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
         </div>
 
         <DragOverlay>
@@ -482,7 +347,7 @@ const handleStatusUpdate = async (orderId, newStatus) => {
               </div>
             </div>
           ) : null}
-</DragOverlay>
+        </DragOverlay>
       </DndContext>
 
       {/* Order Creation Modal */}
