@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ApperIcon from "@/components/ApperIcon";
-import Button from "@/components/atoms/Button";
 import Input from "@/components/atoms/Input";
+import Button from "@/components/atoms/Button";
 import { cn } from "@/utils/cn";
 
 const CategoryItem = ({ 
@@ -91,8 +91,19 @@ const CategoryItem = ({
         )}
       </div>
 
-      {!isEditing && (
+{!isEditing && (
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <Button
+            size="sm"
+            variant="ghost"
+            className={cn(
+              "h-8 w-8 p-0 cursor-grab active:cursor-grabbing",
+              isSelected ? "text-white hover:bg-primary-400" : "text-gray-500 hover:text-gray-700"
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ApperIcon name="GripVertical" className="h-3 w-3" />
+          </Button>
           <Button
             size="sm"
             variant="ghost"

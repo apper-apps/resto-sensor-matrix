@@ -95,6 +95,16 @@ body {
 .gradient-text {
   background: linear-gradient(135deg, #00BFA6 0%, #4ECDC4 100%);
   -webkit-background-clip: text;
+-webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Drag and drop styles */
+.cursor-grab {
+  cursor: grab;
+}
+
+.cursor-grabbing, .cursor-grabbing * {
+  cursor: grabbing !important;
 }

@@ -1,17 +1,31 @@
-import React, { useState, useEffect } from "react";
-import Button from "@/components/atoms/Button";
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import { menuService } from "@/services/api/menuService";
+import ApperIcon from "@/components/ApperIcon";
 import SearchBar from "@/components/molecules/SearchBar";
 import CategoryItem from "@/components/molecules/CategoryItem";
-import MenuItemCard from "@/components/molecules/MenuItemCard";
 import Modal from "@/components/molecules/Modal";
-import Input from "@/components/atoms/Input";
-import Switch from "@/components/atoms/Switch";
-import ApperIcon from "@/components/ApperIcon";
+import MenuItemCard from "@/components/molecules/MenuItemCard";
 import Loading from "@/components/ui/Loading";
 import Error from "@/components/ui/Error";
 import Empty from "@/components/ui/Empty";
-import { menuService } from "@/services/api/menuService";
-import { toast } from "react-toastify";
+import Input from "@/components/atoms/Input";
+import Button from "@/components/atoms/Button";
+import Switch from "@/components/atoms/Switch";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 const MenuManagement = () => {
   const [categories, setCategories] = useState([]);
@@ -37,6 +51,13 @@ const MenuManagement = () => {
   });
   const [newCategoryName, setNewCategoryName] = useState("");
 
+  // DnD Kit sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
   const loadData = async () => {
     try {
       setLoading(true);
@@ -211,6 +232,32 @@ const MenuManagement = () => {
     } catch (err) {
       toast.error("Failed to update item availability");
     }
+};
+
+  const handleReorderCategories = async (event) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const oldIndex = categories.findIndex(cat => cat.Id === active.id);
+      const newIndex = categories.findIndex(cat => cat.Id === over.id);
+      
+      const reorderedCategories = arrayMove(categories, oldIndex, newIndex);
+      setCategories(reorderedCategories);
+
+      try {
+        // Update display order in backend
+        await Promise.all(
+          reorderedCategories.map((category, index) =>
+            menuService.updateCategory(category.Id, { ...category, displayOrder: index + 1 })
+          )
+        );
+        toast.success("Categories reordered successfully!");
+      } catch (err) {
+        // Revert on error
+        setCategories(categories);
+        toast.error("Failed to reorder categories");
+      }
+    }
   };
 
   if (loading) {
@@ -257,7 +304,7 @@ const MenuManagement = () => {
           icon="Grid3X3"
         />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+<div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Categories Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -271,21 +318,32 @@ const MenuManagement = () => {
                   <ApperIcon name="Plus" className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="space-y-2">
-                {categories.map((category) => (
-                  <CategoryItem
-                    key={category.Id}
-                    category={category}
-                    isSelected={selectedCategoryId === category.Id}
-                    onSelect={setSelectedCategoryId}
-                    onEdit={handleEditCategory}
-                    onDelete={handleDeleteCategory}
-                    isEditing={editingCategoryId === category.Id}
-                    onEditStart={() => setEditingCategoryId(category.Id)}
-                    onEditCancel={() => setEditingCategoryId(null)}
-                  />
-                ))}
-              </div>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleReorderCategories}
+              >
+                <SortableContext 
+                  items={categories.map(cat => cat.Id)} 
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-2">
+                    {categories.map((category) => (
+                      <CategoryItem
+                        key={category.Id}
+                        category={category}
+                        isSelected={selectedCategoryId === category.Id}
+                        onSelect={setSelectedCategoryId}
+                        onEdit={handleEditCategory}
+                        onDelete={handleDeleteCategory}
+                        isEditing={editingCategoryId === category.Id}
+                        onEditStart={() => setEditingCategoryId(category.Id)}
+                        onEditCancel={() => setEditingCategoryId(null)}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             </div>
           </div>
 

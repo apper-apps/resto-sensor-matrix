@@ -15,10 +15,25 @@ class MenuService {
   async getAllCategories() {
     await delay(300);
     // Update item counts
-    return this.categories.map(category => ({
+return this.categories.map(category => ({
       ...category,
       itemCount: this.menuItems.filter(item => item.categoryId === category.Id).length
     }));
+  }
+
+  async reorderCategories(categoryIds) {
+    await delay(300);
+    // Update displayOrder based on new order
+    categoryIds.forEach((id, index) => {
+      const category = this.categories.find(cat => cat.Id === parseInt(id));
+      if (category) {
+        category.displayOrder = index + 1;
+      }
+    });
+    
+    // Sort categories by displayOrder
+    this.categories.sort((a, b) => a.displayOrder - b.displayOrder);
+    return [...this.categories];
   }
 
   async getCategoryById(id) {
