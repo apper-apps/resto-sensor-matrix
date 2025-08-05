@@ -20,12 +20,14 @@ import DroppableColumn from "@/components/atoms/DroppableColumn";
 import { Card, CardContent } from "@/components/atoms/Card";
 const Orders = () => {
   // State management
-  const [orders, setOrders] = useState([]);
+const [orders, setOrders] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
+  const [showOrderDetailsModal, setShowOrderDetailsModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const [currentOrder, setCurrentOrder] = useState({
     items: [],
     customerId: '',
@@ -116,6 +118,11 @@ const Orders = () => {
       specialRequests: ''
     });
     setShowOrderModal(true);
+};
+
+  const handleViewOrderDetails = (order) => {
+    setSelectedOrder(order);
+    setShowOrderDetailsModal(true);
   };
 
   const handleAddMenuItem = (item) => {
@@ -323,10 +330,11 @@ toast.success("Order deleted successfully!");
                           </div>
                         ) : (
                           statusOrders.map(order => (
-                            <DraggableOrderCard
+<DraggableOrderCard
                               key={order.Id}
                               order={order}
                               timer={timers[order.Id]}
+                              onClick={() => handleViewOrderDetails(order)}
                             />
                           ))
                         )}
@@ -480,6 +488,134 @@ toast.success("Order deleted successfully!");
             </Button>
           </div>
         </div>
+</Modal>
+
+      {/* Order Details Modal */}
+      <Modal
+        isOpen={showOrderDetailsModal}
+        onClose={() => setShowOrderDetailsModal(false)}
+        title="Order Details"
+        size="lg"
+      >
+        {selectedOrder && (
+          <div className="space-y-6">
+            {/* Order Header */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold text-lg text-gray-900">
+                    {selectedOrder.orderNumber || `Order #${selectedOrder.Id}`}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Customer: {selectedOrder.customerName || 'Unknown Customer'}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Table: {selectedOrder.tableNumber || 'N/A'}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Type: {selectedOrder.orderType || 'dine-in'}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <Badge variant={selectedOrder.status === 'served' ? 'success' : 'warning'}>
+                    {getStatusConfig(selectedOrder.status).label}
+                  </Badge>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Ordered: {selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleString() : 'N/A'}
+                  </p>
+                  {selectedOrder.updatedAt && (
+                    <p className="text-sm text-gray-600">
+                      Updated: {new Date(selectedOrder.updatedAt).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Order Items */}
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-3">Order Items</h4>
+              <div className="space-y-2">
+                {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                  selectedOrder.items.map((item, index) => (
+                    <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">{item.menuItemName || item.name}</p>
+                        <p className="text-sm text-gray-600">Quantity: {item.quantity || 1}</p>
+                        {item.specialRequests && (
+                          <p className="text-sm text-orange-600">Note: {item.specialRequests}</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-gray-900">
+                          {formatCurrency((item.price || 0) * (item.quantity || 1))}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {formatCurrency(item.price || 0)} each
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-600 text-center py-4">No items found</p>
+                )}
+              </div>
+            </div>
+
+            {/* Special Requests */}
+            {selectedOrder.specialRequests && (
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-2">Special Requests</h4>
+                <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <p className="text-orange-800">{selectedOrder.specialRequests}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Order Summary */}
+            <div className="border-t pt-4">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="text-gray-900">{formatCurrency((selectedOrder.totalAmount || 0) * 0.9)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Tax (10%):</span>
+                  <span className="text-gray-900">{formatCurrency((selectedOrder.totalAmount || 0) * 0.1)}</span>
+                </div>
+                <div className="flex justify-between font-semibold text-lg border-t pt-2">
+                  <span>Total:</span>
+                  <span>{formatCurrency(selectedOrder.totalAmount || 0)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2 pt-4">
+              {selectedOrder.status !== 'served' && (
+                <Button
+                  onClick={() => {
+                    const nextStatus = selectedOrder.status === 'received' ? 'preparing' :
+                                    selectedOrder.status === 'preparing' ? 'ready' : 'served';
+                    handleStatusUpdate(selectedOrder.Id, nextStatus);
+                    setShowOrderDetailsModal(false);
+                  }}
+                  className="flex-1"
+                >
+                  Mark as {selectedOrder.status === 'received' ? 'Preparing' :
+                          selectedOrder.status === 'preparing' ? 'Ready' : 'Served'}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => setShowOrderDetailsModal(false)}
+                className="flex-1"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
