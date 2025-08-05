@@ -29,18 +29,18 @@ const MenuItemCard = ({
         {/* Content */}
         <div className="p-4">
           <div className="flex items-start justify-between mb-2">
-            <h3 className="font-semibold text-gray-900 text-lg truncate flex-1">
-              {item.name}
+<h3 className="font-semibold text-gray-900 text-lg truncate flex-1">
+              {item.Name || item.name}
             </h3>
             <div className="flex items-center gap-2 ml-2">
               <span className="text-xl font-bold text-primary-600">
-                ${item.price.toFixed(2)}
+                ${(item.price || 0).toFixed(2)}
               </span>
             </div>
           </div>
 
           <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-            {item.description}
+            {item.description || ''}
           </p>
 
           <div className="flex items-center justify-between">

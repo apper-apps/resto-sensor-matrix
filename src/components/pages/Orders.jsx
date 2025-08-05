@@ -130,13 +130,13 @@ const Orders = () => {
             : orderItem
         )
       }));
-    } else {
+} else {
       const newOrderItem = {
         Id: Date.now(),
         menuItemId: item.Id,
-        menuItemName: item.name,
+        menuItemName: item.Name || item.name,
         quantity: 1,
-        price: item.price,
+        price: item.price || 0,
         specialRequests: ''
       };
       setCurrentOrder(prev => ({
@@ -176,22 +176,22 @@ const Orders = () => {
         totalAmount
       };
 
-      await orderService.createOrder(orderData);
+await orderService.createOrder(orderData);
       toast.success("Order created successfully!");
       setShowOrderModal(false);
       loadData();
     } catch (err) {
-      toast.error("Failed to create order");
+      toast.error(err.message || "Failed to create order");
     }
   };
 
 const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       await orderService.updateOrderStatus(orderId, newStatus);
-      toast.success(`Order status updated to ${newStatus}`);
+toast.success(`Order status updated to ${newStatus}`);
       loadData();
     } catch (err) {
-      toast.error("Failed to update order status");
+      toast.error(err.message || "Failed to update order status");
     }
   };
 
@@ -224,10 +224,10 @@ const handleDeleteOrder = async (orderId) => {
     
     try {
       await orderService.deleteOrder(orderId);
-      toast.success("Order deleted successfully!");
+toast.success("Order deleted successfully!");
       loadData();
     } catch (err) {
-      toast.error("Failed to delete order");
+      toast.error(err.message || "Failed to delete order");
     }
   };
 

@@ -1,162 +1,472 @@
-import categoriesData from "@/services/mockData/categories.json";
-import menuItemsData from "@/services/mockData/menuItems.json";
-
-// Simulated delay for realistic loading states
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
 class MenuService {
   constructor() {
-    // Initialize with deep copies to prevent mutations
-    this.categories = JSON.parse(JSON.stringify(categoriesData));
-    this.menuItems = JSON.parse(JSON.stringify(menuItemsData));
+    const { ApperClient } = window.ApperSDK;
+    this.apperClient = new ApperClient({
+      apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+      apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
+    });
   }
 
   // Category methods
   async getAllCategories() {
-    await delay(300);
-    // Update item counts
-return this.categories.map(category => ({
-      ...category,
-      itemCount: this.menuItems.filter(item => item.categoryId === category.Id).length
-    }));
-  }
+    try {
+      const params = {
+        fields: [
+          { field: { Name: "Name" } },
+          { field: { Name: "displayOrder" } },
+          { field: { Name: "itemCount" } },
+          { field: { Name: "isActive" } }
+        ],
+        orderBy: [
+          {
+            fieldName: "displayOrder",
+            sorttype: "ASC"
+          }
+        ]
+      };
 
-  async reorderCategories(categoryIds) {
-    await delay(300);
-    // Update displayOrder based on new order
-    categoryIds.forEach((id, index) => {
-      const category = this.categories.find(cat => cat.Id === parseInt(id));
-      if (category) {
-        category.displayOrder = index + 1;
+      const response = await this.apperClient.fetchRecords('category', params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
       }
-    });
-    
-    // Sort categories by displayOrder
-    this.categories.sort((a, b) => a.displayOrder - b.displayOrder);
-    return [...this.categories];
+
+      return response.data || [];
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error fetching categories:", error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error("Error fetching categories:", error.message);
+        throw error;
+      }
+    }
   }
 
   async getCategoryById(id) {
-    await delay(200);
-    const category = this.categories.find(cat => cat.Id === parseInt(id));
-    if (!category) {
-      throw new Error("Category not found");
+    try {
+      const params = {
+        fields: [
+          { field: { Name: "Name" } },
+          { field: { Name: "displayOrder" } },
+          { field: { Name: "itemCount" } },
+          { field: { Name: "isActive" } }
+        ]
+      };
+      
+      const response = await this.apperClient.getRecordById('category', parseInt(id), params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      return response.data;
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error(`Error fetching category with ID ${id}:`, error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error(`Error fetching category with ID ${id}:`, error.message);
+        throw error;
+      }
     }
-    return {
-      ...category,
-      itemCount: this.menuItems.filter(item => item.categoryId === category.Id).length
-    };
   }
 
   async createCategory(categoryData) {
-    await delay(300);
-    const newCategory = {
-      Id: Math.max(...this.categories.map(c => c.Id), 0) + 1,
-      ...categoryData,
-      itemCount: 0
-    };
-    this.categories.push(newCategory);
-    return newCategory;
+    try {
+      const params = {
+        records: [
+          {
+            Name: categoryData.name,
+            displayOrder: categoryData.displayOrder || 1,
+            itemCount: categoryData.itemCount || 0,
+            isActive: categoryData.isActive !== undefined ? categoryData.isActive : true
+          }
+        ]
+      };
+
+      const response = await this.apperClient.createRecord('category', params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      if (response.results) {
+        const successfulRecords = response.results.filter(result => result.success);
+        const failedRecords = response.results.filter(result => !result.success);
+        
+        if (failedRecords.length > 0) {
+          console.error(`Failed to create category ${failedRecords.length} records:${JSON.stringify(failedRecords)}`);
+          failedRecords.forEach(record => {
+            record.errors?.forEach(error => {
+              throw new Error(`${error.fieldLabel}: ${error.message}`);
+            });
+            if (record.message) throw new Error(record.message);
+          });
+        }
+        
+        return successfulRecords[0]?.data;
+      }
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error creating category:", error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error("Error creating category:", error.message);
+        throw error;
+      }
+    }
   }
 
   async updateCategory(id, updates) {
-    await delay(300);
-    const index = this.categories.findIndex(cat => cat.Id === parseInt(id));
-    if (index === -1) {
-      throw new Error("Category not found");
+    try {
+      const params = {
+        records: [
+          {
+            Id: parseInt(id),
+            Name: updates.name || updates.Name,
+            displayOrder: updates.displayOrder,
+            itemCount: updates.itemCount,
+            isActive: updates.isActive
+          }
+        ]
+      };
+
+      const response = await this.apperClient.updateRecord('category', params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      if (response.results) {
+        const successfulUpdates = response.results.filter(result => result.success);
+        const failedUpdates = response.results.filter(result => !result.success);
+        
+        if (failedUpdates.length > 0) {
+          console.error(`Failed to update category ${failedUpdates.length} records:${JSON.stringify(failedUpdates)}`);
+          failedUpdates.forEach(record => {
+            record.errors?.forEach(error => {
+              throw new Error(`${error.fieldLabel}: ${error.message}`);
+            });
+            if (record.message) throw new Error(record.message);
+          });
+        }
+        
+        return successfulUpdates[0]?.data;
+      }
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error updating category:", error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error("Error updating category:", error.message);
+        throw error;
+      }
     }
-    
-    this.categories[index] = { ...this.categories[index], ...updates };
-    return {
-      ...this.categories[index],
-      itemCount: this.menuItems.filter(item => item.categoryId === this.categories[index].Id).length
-    };
   }
 
   async deleteCategory(id) {
-    await delay(300);
-    const index = this.categories.findIndex(cat => cat.Id === parseInt(id));
-    if (index === -1) {
-      throw new Error("Category not found");
+    try {
+      const params = {
+        RecordIds: [parseInt(id)]
+      };
+
+      const response = await this.apperClient.deleteRecord('category', params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      if (response.results) {
+        const failedDeletions = response.results.filter(result => !result.success);
+        
+        if (failedDeletions.length > 0) {
+          console.error(`Failed to delete category ${failedDeletions.length} records:${JSON.stringify(failedDeletions)}`);
+          failedDeletions.forEach(record => {
+            if (record.message) throw new Error(record.message);
+          });
+        }
+        
+        return true;
+      }
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error deleting category:", error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error("Error deleting category:", error.message);
+        throw error;
+      }
     }
-    
-    // Check if category has items
-    const hasItems = this.menuItems.some(item => item.categoryId === parseInt(id));
-    if (hasItems) {
-      throw new Error("Cannot delete category with items");
-    }
-    
-    this.categories.splice(index, 1);
-    return true;
   }
 
   // Menu item methods
   async getAllItems() {
-    await delay(300);
-    return [...this.menuItems];
+    try {
+      const params = {
+        fields: [
+          { field: { Name: "Name" } },
+          { field: { Name: "price" } },
+          { field: { Name: "description" } },
+          { field: { Name: "imageUrl" } },
+          { field: { Name: "isAvailable" } },
+          { field: { Name: "createdAt" } },
+          { field: { Name: "updatedAt" } },
+          { field: { Name: "categoryId" } }
+        ],
+        orderBy: [
+          {
+            fieldName: "Name",
+            sorttype: "ASC"
+          }
+        ]
+      };
+
+      const response = await this.apperClient.fetchRecords('menu_item', params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      return response.data || [];
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error fetching menu items:", error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error("Error fetching menu items:", error.message);
+        throw error;
+      }
+    }
   }
 
   async getItemById(id) {
-    await delay(200);
-    const item = this.menuItems.find(item => item.Id === parseInt(id));
-    if (!item) {
-      throw new Error("Menu item not found");
+    try {
+      const params = {
+        fields: [
+          { field: { Name: "Name" } },
+          { field: { Name: "price" } },
+          { field: { Name: "description" } },
+          { field: { Name: "imageUrl" } },
+          { field: { Name: "isAvailable" } },
+          { field: { Name: "createdAt" } },
+          { field: { Name: "updatedAt" } },
+          { field: { Name: "categoryId" } }
+        ]
+      };
+      
+      const response = await this.apperClient.getRecordById('menu_item', parseInt(id), params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      return response.data;
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error(`Error fetching menu item with ID ${id}:`, error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error(`Error fetching menu item with ID ${id}:`, error.message);
+        throw error;
+      }
     }
-    return { ...item };
   }
 
   async getItemsByCategory(categoryId) {
-    await delay(300);
-    return this.menuItems.filter(item => item.categoryId === parseInt(categoryId));
+    try {
+      const params = {
+        fields: [
+          { field: { Name: "Name" } },
+          { field: { Name: "price" } },
+          { field: { Name: "description" } },
+          { field: { Name: "imageUrl" } },
+          { field: { Name: "isAvailable" } },
+          { field: { Name: "createdAt" } },
+          { field: { Name: "updatedAt" } },
+          { field: { Name: "categoryId" } }
+        ],
+        where: [
+          {
+            FieldName: "categoryId",
+            Operator: "EqualTo",
+            Values: [parseInt(categoryId)]
+          }
+        ]
+      };
+
+      const response = await this.apperClient.fetchRecords('menu_item', params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      return response.data || [];
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error fetching menu items by category:", error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error("Error fetching menu items by category:", error.message);
+        throw error;
+      }
+    }
   }
 
   async createItem(itemData) {
-    await delay(300);
-    const newItem = {
-      Id: Math.max(...this.menuItems.map(i => i.Id), 0) + 1,
-      ...itemData,
-      imageUrl: "",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    this.menuItems.push(newItem);
-    return newItem;
+    try {
+      const params = {
+        records: [
+          {
+            Name: itemData.name,
+            price: parseFloat(itemData.price),
+            description: itemData.description || "",
+            categoryId: parseInt(itemData.categoryId),
+            imageUrl: itemData.imageUrl || "",
+            isAvailable: itemData.isAvailable !== undefined ? itemData.isAvailable : true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+        ]
+      };
+
+      const response = await this.apperClient.createRecord('menu_item', params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      if (response.results) {
+        const successfulRecords = response.results.filter(result => result.success);
+        const failedRecords = response.results.filter(result => !result.success);
+        
+        if (failedRecords.length > 0) {
+          console.error(`Failed to create menu item ${failedRecords.length} records:${JSON.stringify(failedRecords)}`);
+          failedRecords.forEach(record => {
+            record.errors?.forEach(error => {
+              throw new Error(`${error.fieldLabel}: ${error.message}`);
+            });
+            if (record.message) throw new Error(record.message);
+          });
+        }
+        
+        return successfulRecords[0]?.data;
+      }
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error creating menu item:", error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error("Error creating menu item:", error.message);
+        throw error;
+      }
+    }
   }
 
   async updateItem(id, updates) {
-    await delay(300);
-    const index = this.menuItems.findIndex(item => item.Id === parseInt(id));
-    if (index === -1) {
-      throw new Error("Menu item not found");
+    try {
+      const updateData = {
+        Id: parseInt(id)
+      };
+
+      // Only include updateable fields
+      if (updates.name !== undefined) updateData.Name = updates.name;
+      if (updates.price !== undefined) updateData.price = parseFloat(updates.price);
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.categoryId !== undefined) updateData.categoryId = parseInt(updates.categoryId);
+      if (updates.imageUrl !== undefined) updateData.imageUrl = updates.imageUrl;
+      if (updates.isAvailable !== undefined) updateData.isAvailable = updates.isAvailable;
+      if (updates.updatedAt !== undefined) updateData.updatedAt = updates.updatedAt;
+
+      const params = {
+        records: [updateData]
+      };
+
+      const response = await this.apperClient.updateRecord('menu_item', params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      if (response.results) {
+        const successfulUpdates = response.results.filter(result => result.success);
+        const failedUpdates = response.results.filter(result => !result.success);
+        
+        if (failedUpdates.length > 0) {
+          console.error(`Failed to update menu item ${failedUpdates.length} records:${JSON.stringify(failedUpdates)}`);
+          failedUpdates.forEach(record => {
+            record.errors?.forEach(error => {
+              throw new Error(`${error.fieldLabel}: ${error.message}`);
+            });
+            if (record.message) throw new Error(record.message);
+          });
+        }
+        
+        return successfulUpdates[0]?.data;
+      }
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error updating menu item:", error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error("Error updating menu item:", error.message);
+        throw error;
+      }
     }
-    
-    this.menuItems[index] = {
-      ...this.menuItems[index],
-      ...updates,
-      updatedAt: new Date().toISOString()
-    };
-    return { ...this.menuItems[index] };
   }
 
   async deleteItem(id) {
-    await delay(300);
-    const index = this.menuItems.findIndex(item => item.Id === parseInt(id));
-    if (index === -1) {
-      throw new Error("Menu item not found");
+    try {
+      const params = {
+        RecordIds: [parseInt(id)]
+      };
+
+      const response = await this.apperClient.deleteRecord('menu_item', params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      if (response.results) {
+        const failedDeletions = response.results.filter(result => !result.success);
+        
+        if (failedDeletions.length > 0) {
+          console.error(`Failed to delete menu item ${failedDeletions.length} records:${JSON.stringify(failedDeletions)}`);
+          failedDeletions.forEach(record => {
+            if (record.message) throw new Error(record.message);
+          });
+        }
+        
+        return true;
+      }
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error deleting menu item:", error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error("Error deleting menu item:", error.message);
+        throw error;
+      }
     }
-    
-    this.menuItems.splice(index, 1);
-    return true;
   }
 
   // Bulk operations
   async toggleItemAvailability(id, isAvailable) {
-    await delay(200);
     return this.updateItem(id, { isAvailable });
   }
 
   async bulkUpdateAvailability(itemIds, isAvailable) {
-    await delay(400);
     const updates = itemIds.map(id => this.updateItem(id, { isAvailable }));
     return Promise.all(updates);
   }

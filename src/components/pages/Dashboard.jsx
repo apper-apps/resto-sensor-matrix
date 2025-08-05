@@ -14,19 +14,18 @@ const Dashboard = () => {
       setLoading(true);
       setError("");
       
-      const categories = await menuService.getAllCategories();
+const categories = await menuService.getAllCategories();
       const items = await menuService.getAllItems();
       
       const activeItems = items.filter(item => item.isAvailable);
-      
       setMetrics({
         totalItems: items.length,
         activeItems: activeItems.length,
         categories: categories.length,
         todayRevenue: 2456.78 // Mock data for now
       });
-    } catch (err) {
-      setError("Failed to load dashboard metrics");
+} catch (err) {
+      setError(err.message || "Failed to load dashboard metrics");
     } finally {
       setLoading(false);
     }
@@ -67,10 +66,10 @@ const Dashboard = () => {
       </div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="Total Menu Items"
-          value={metrics.totalItems}
+          value={metrics?.totalItems || 0}
           icon="ChefHat"
           trend="up"
           trendValue="+12%"
@@ -79,7 +78,7 @@ const Dashboard = () => {
         
         <MetricCard
           title="Active Items"
-          value={metrics.activeItems}
+          value={metrics?.activeItems || 0}
           icon="CheckCircle"
           trend="up"
           trendValue="+8%"
@@ -88,7 +87,7 @@ const Dashboard = () => {
         
         <MetricCard
           title="Categories"
-          value={metrics.categories}
+          value={metrics?.categories || 0}
           icon="Grid3X3"
           trend="neutral"
           trendValue="0%"
@@ -97,7 +96,7 @@ const Dashboard = () => {
         
         <MetricCard
           title="Today's Revenue"
-          value={`$${metrics.todayRevenue.toFixed(2)}`}
+          value={`$${(metrics?.todayRevenue || 0).toFixed(2)}`}
           icon="DollarSign"
           trend="up"
           trendValue="+15%"

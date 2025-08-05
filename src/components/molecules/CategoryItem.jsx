@@ -14,7 +14,7 @@ const CategoryItem = ({
   onEditStart,
   onEditCancel
 }) => {
-  const [editName, setEditName] = useState(category.name);
+const [editName, setEditName] = useState(category.Name || category.name);
 
   const handleEditSubmit = (e) => {
     e.preventDefault();
@@ -25,7 +25,7 @@ const CategoryItem = ({
   };
 
   const handleEditCancel = () => {
-    setEditName(category.name);
+    setEditName(category.Name || category.name);
     onEditCancel();
   };
 
@@ -75,17 +75,17 @@ const CategoryItem = ({
           </form>
         ) : (
           <div>
-            <p className={cn(
+<p className={cn(
               "font-medium truncate",
               isSelected ? "text-white" : "text-gray-900"
             )}>
-              {category.name}
+              {category.Name || category.name}
             </p>
             <p className={cn(
               "text-sm truncate",
               isSelected ? "text-primary-100" : "text-gray-500"
             )}>
-              {category.itemCount} items
+              {category.itemCount || 0} items
             </p>
           </div>
         )}

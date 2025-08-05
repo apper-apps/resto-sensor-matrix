@@ -83,11 +83,14 @@ const MenuManagement = () => {
     loadData();
   }, []);
 
-  const filteredItems = items.filter(item => {
-    const matchesCategory = !selectedCategoryId || item.categoryId === selectedCategoryId;
+const filteredItems = items.filter(item => {
+    const categoryId = item.categoryId?.Id || item.categoryId;
+    const matchesCategory = !selectedCategoryId || categoryId === selectedCategoryId;
+    const itemName = item.Name || item.name || '';
+    const itemDescription = item.description || '';
     const matchesSearch = !searchQuery || 
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase());
+      itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      itemDescription.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -95,7 +98,7 @@ const MenuManagement = () => {
     if (!newCategoryName.trim()) return;
     
     try {
-      const newCategory = await menuService.createCategory({
+const newCategory = await menuService.createCategory({
         name: newCategoryName.trim(),
         displayOrder: categories.length + 1,
         itemCount: 0,
@@ -106,11 +109,11 @@ const MenuManagement = () => {
       setShowAddCategory(false);
       toast.success("Category added successfully!");
     } catch (err) {
-      toast.error("Failed to add category");
+      toast.error(err.message || "Failed to add category");
     }
   };
 
-  const handleEditCategory = async (categoryId, newName) => {
+const handleEditCategory = async (categoryId, newName) => {
     try {
       const updatedCategory = await menuService.updateCategory(categoryId, { name: newName });
       setCategories(categories.map(cat => 
@@ -119,7 +122,7 @@ const MenuManagement = () => {
       setEditingCategoryId(null);
       toast.success("Category updated successfully!");
     } catch (err) {
-      toast.error("Failed to update category");
+      toast.error(err.message || "Failed to update category");
     }
   };
 
@@ -137,9 +140,9 @@ const MenuManagement = () => {
         if (selectedCategoryId === categoryId) {
           setSelectedCategoryId(categories.length > 1 ? categories.find(cat => cat.Id !== categoryId)?.Id : null);
         }
-        toast.success("Category deleted successfully!");
+toast.success("Category deleted successfully!");
       } catch (err) {
-        toast.error("Failed to delete category");
+        toast.error(err.message || "Failed to delete category");
       }
     }
   };
@@ -156,14 +159,14 @@ const MenuManagement = () => {
     setShowItemModal(true);
   };
 
-  const handleEditItem = (item) => {
+const handleEditItem = (item) => {
     setEditingItem(item);
     setItemForm({
-      name: item.name,
-      price: item.price.toString(),
-      description: item.description,
-      categoryId: item.categoryId.toString(),
-      isAvailable: item.isAvailable
+      name: item.Name || item.name,
+      price: (item.price || 0).toString(),
+      description: item.description || "",
+      categoryId: (item.categoryId?.Id || item.categoryId || "").toString(),
+      isAvailable: item.isAvailable || true
     });
     setShowItemModal(true);
   };
@@ -197,9 +200,9 @@ const MenuManagement = () => {
       const updatedCategories = await menuService.getAllCategories();
       setCategories(updatedCategories);
       
-      setShowItemModal(false);
+setShowItemModal(false);
     } catch (err) {
-      toast.error("Failed to save menu item");
+      toast.error(err.message || "Failed to save menu item");
     }
   };
 
@@ -213,9 +216,9 @@ const MenuManagement = () => {
         const updatedCategories = await menuService.getAllCategories();
         setCategories(updatedCategories);
         
-        toast.success("Menu item deleted successfully!");
+toast.success("Menu item deleted successfully!");
       } catch (err) {
-        toast.error("Failed to delete menu item");
+        toast.error(err.message || "Failed to delete menu item");
       }
     }
   };
@@ -228,9 +231,9 @@ const MenuManagement = () => {
         isAvailable: !item.isAvailable
       });
       setItems(items.map(i => i.Id === itemId ? updatedItem : i));
-      toast.success(`Item ${updatedItem.isAvailable ? 'activated' : 'deactivated'} successfully!`);
+toast.success(`Item ${updatedItem.isAvailable ? 'activated' : 'deactivated'} successfully!`);
     } catch (err) {
-      toast.error("Failed to update item availability");
+      toast.error(err.message || "Failed to update item availability");
     }
 };
 

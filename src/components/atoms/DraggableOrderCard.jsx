@@ -57,8 +57,8 @@ const DraggableOrderCard = ({ order, timer, onClick }) => {
       onClick={onClick}
     >
       <div className="flex items-start justify-between mb-2">
-        <div className="font-semibold text-sm text-gray-900">
-          {order.orderNumber}
+<div className="font-semibold text-sm text-gray-900">
+          {order.orderNumber || `Order #${order.Id}`}
         </div>
         {timer && (
           <div className={`text-xs px-1.5 py-0.5 rounded font-medium ${
@@ -72,21 +72,21 @@ const DraggableOrderCard = ({ order, timer, onClick }) => {
       </div>
       
       <div className="space-y-1 text-xs text-gray-600">
-        <div className="flex items-center gap-1">
+<div className="flex items-center gap-1">
           <ApperIcon name="User" className="h-3 w-3" />
-          {order.customerName}
+          {order.customerName || 'Unknown Customer'}
         </div>
         <div className="flex items-center gap-1">
           <ApperIcon name={order.orderType === 'delivery' ? 'Truck' : 'MapPin'} className="h-3 w-3" />
-          {order.tableNumber}
+          {order.tableNumber || 'N/A'}
         </div>
         <div className="flex items-center gap-1">
           <ApperIcon name="Clock" className="h-3 w-3" />
-          {formatTime(order.createdAt)}
+          {order.createdAt ? formatTime(order.createdAt) : 'N/A'}
         </div>
         <div className="flex items-center gap-1">
           <ApperIcon name="Package" className="h-3 w-3" />
-          {order.items.length} items - {formatCurrency(order.totalAmount)}
+          {(order.items?.length || 0)} items - {formatCurrency(order.totalAmount || 0)}
         </div>
         {order.specialRequests && (
           <div className="flex items-center gap-1 text-orange-600">

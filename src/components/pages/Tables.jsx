@@ -160,14 +160,14 @@ const Tables = () => {
       const newX = Math.max(0, table.x + delta.x);
       const newY = Math.max(0, table.y + delta.y);
       
-      try {
+try {
         await tableService.updateTablePosition(tableId, newX, newY);
         setTables(prev => prev.map(t => 
           t.Id === tableId ? { ...t, x: newX, y: newY } : t
         ));
         toast.success(`Table ${table.number} moved`);
       } catch (error) {
-        toast.error('Failed to move table');
+        toast.error(error.message || 'Failed to move table');
       }
     }
   };
@@ -191,10 +191,10 @@ const Tables = () => {
       setTables(prev => prev.map(t => 
         t.Id === tableId ? { ...t, status } : t
       ));
-      await loadData(); // Refresh stats
+await loadData(); // Refresh stats
       toast.success(`Table status updated to ${status}`);
     } catch (error) {
-      toast.error('Failed to update table status');
+      toast.error(error.message || 'Failed to update table status');
     }
     setShowStatusMenu(false);
     setStatusMenuTable(null);
@@ -213,9 +213,9 @@ const Tables = () => {
         x: 200,
         y: 200
       });
-      toast.success(`Table ${addedTable.number} added`);
+toast.success(`Table ${addedTable.number} added`);
     } catch (error) {
-      toast.error('Failed to add table');
+      toast.error(error.message || 'Failed to add table');
     }
   };
 
@@ -229,9 +229,9 @@ const Tables = () => {
       await loadData(); // Refresh stats
       setShowEditModal(false);
       setEditingTable(null);
-      toast.success(`Table ${editingTable.number} updated`);
+toast.success(`Table ${editingTable.number} updated`);
     } catch (error) {
-      toast.error('Failed to update table');
+      toast.error(error.message || 'Failed to update table');
     }
   };
 
@@ -243,9 +243,9 @@ const Tables = () => {
       await loadData(); // Refresh stats
       setShowEditModal(false);
       setEditingTable(null);
-      toast.success('Table deleted');
+toast.success('Table deleted');
     } catch (error) {
-      toast.error('Failed to delete table');
+      toast.error(error.message || 'Failed to delete table');
     }
   };
 
